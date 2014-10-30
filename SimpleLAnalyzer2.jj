@@ -1,0 +1,167 @@
+/*******************************
+***** SECTION 1 - OPTIONS *****
+*******************************/
+options {
+ JAVA_UNICODE_ESCAPE = true; 
+ IGNORE_CASE = true;
+}
+
+/*********************************
+***** SECTION 2 - USER CODE *****
+*********************************/
+/* Tokeniser is based off the Straight Line Programming Language 
+* example in the notes 
+*/
+PARSER_BEGIN(SimpleLAnalyzer)
+
+public class SimpleLAnalyzer {
+	public static void main(String args[]) {
+	
+		SimpleLAnalyzer tokeniser;	
+		if (args.length == 0) {
+			System.out.println("Reading from standard input . . .");
+			tokeniser = new SimpleLAnalyzer(System.in);
+		} else if (args.length == 1) {
+			try {
+				tokeniser = new SimpleLAnalyzer(new java.io.FileInputStream(args[0]));
+			} catch (java.io.FileNotFoundException e) {
+				System.err.println("File " + args[0] + " not found.");
+				return;
+			}
+		}
+		else {
+			System.out.println("SimpL Tokeniser: Usage is one of:");
+			System.out.println(" java SimpleLAnalyzer < inputfile");
+			System.out.println("OR");
+			System.out.println(" java SimpleLAnalyzer inputfile");
+			return;
+		}
+		/*
+		* We’ve now initialised the tokeniser to read from the appropriate place,
+		* so just keep reading tokens and printing them until we hit EOF
+		*/
+		for (Token t = getNextToken(); t.kind!=EOF; t = getNextToken()) {
+			// Print out the actual text for the constants, identifiers etc.
+			if (t.kind==NUM) {
+				System.out.print("Number");
+				System.out.print("("+t.image+") ");
+			}
+			else if (t.kind==ID) {
+				System.out.print("Identifier");
+				System.out.print("("+t.image+") ");
+			}
+			else System.out.print(t.image+" ");
+		}
+	}
+}
+PARSER_END(SimpleLAnalyzer)
+
+
+SKIP :
+{
+	" "
+|	"\t"
+|	"\n"
+|	"\r"
+|	"\f"
+}
+
+/* Keyword */
+TOKEN :
+{
+	<WHILE : "while">
+|	<AND : "and">
+|	<OR : "or">
+|	<BOOL : "boolean">
+|	<CONST : "constant">
+|	<DO : "do">
+|	<FALSE : "false">
+|	<IF : "if">
+|	<INT : "integer">
+|	<VAR : "var">
+|	<MAIN : "main">
+|	<NOT : "not">
+|	<ELSE : "else">
+|	<REAL : "real">
+|	<RET : "return">
+|	<STRING : "string">
+|	<THEN : "then">
+|	<VOID : "void">
+}
+
+/* ID's */
+
+TOKEN :
+{
+	<NUM : (<DIGIT>)+>
+|	<RNUM : (<DIGIT>)+"."(<DIGIT>)+>
+|	<#DIGIT : [ "0" - "9"]>
+|	<#LETTER : ["a" - "z", "A" - "Z"]>
+|	<ID : (<LETTER>)+(("_")+(<LETTER>)*)*>
+}
+
+/* Strings */
+
+TOKEN : 
+{
+	<STR : "\""(<LETTER>|<NUM>)*"\"">
+}
+
+/* Operations */
+TOKEN :
+{
+	<PLUS : "+">
+|	<MINUS : "-">
+|	<MUL : "*">
+|	<DIV : "/">
+|	<MOD : "%">
+|	<EQ : "=">
+|	<NOEQ : "!=">
+|	<LESS : "<">
+|	<MOR : ">">
+|	<LEQ : "<=">
+|	<MEQ : ">=">
+|	<LBR : "(">
+|	<RBR : ")">
+|	<LBCK : "{">
+|	<RBCK : "}">
+|	<COM : ",">
+|	<SEMC : ";">
+|	<COL : ":">
+|	<PRD : ".">
+|	<ASSIGN : ":=">
+|	<CONIF : "?">
+|	<NO : "!">
+}
+
+TOKEN :
+{
+	<OTHER : ~[]>
+}
+
+TOKEN_MGR_DECLS :
+{
+	/* Declarations used by the Lexical Analyzer */
+	static int comments = 0;
+}
+
+
+SKIP : /* Comments */
+{
+	"/*" { comments++; } : IN_COMMENT
+}
+
+<IN_COMMENT> SKIP : 
+{
+	"/*" { comments++; }
+|	"*/" { comments--;
+			if(comments == 0)
+				SwitchTo(DEFAULT);	
+		}
+|	<~[]>
+}
+
+
+
+
+
